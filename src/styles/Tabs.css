@@ -5,22 +5,34 @@
     align-items: center;
     margin-bottom: 8px;
   }
+
+  /* two-column card layout for tabs that need side-by-side cards */
+  .two-col {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .two-col .card {
+    flex: 1;
+    margin-bottom: 0;
+  }
   
   .field-row .tooltip {
     position: absolute;
     left: 360px;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     color: white;
-    padding: 4px 8px;
+    padding: 6px 8px;
     border-radius: 4px;
-    white-space: nowrap;
+    max-width: 320px;
+    white-space: normal; /* allow wrapping so it doesn't run off-screen */
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--transition);
     font-size: 0.85rem;
-    z-index: 10;
+    z-index: 1000;
   }
   
   .field-row:hover .tooltip {
@@ -29,6 +41,16 @@
 
   .field-row .tooltip:empty {
     display: none;
+  }
+
+  /* In two-column layouts, for the right-hand card show tooltips below the row
+     so they don't clip off-screen. Keep wrapping from the base style. */
+  .two-col > .card:last-child .field-row .tooltip {
+    left: 0;
+    right: auto;
+    top: calc(100% + 8px);
+    transform: none;
+    max-width: calc(100% - 24px);
   }
 /* only for ESCTab */
 .esc-card h3 {

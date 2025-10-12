@@ -8,6 +8,10 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.invoke('jbeam:applyChanges', { filePath, partKey, pendingChanges }),
   writeFile: (filePath, contents) => ipcRenderer.invoke('fs:writeFile', filePath, contents),
   checkForUpdate: () => ipcRenderer.invoke('check-for-update'),
+  applyEnhancedAudio: (engineFilePath) => ipcRenderer.invoke('audio:applyEnhanced', engineFilePath),
+  applyStockAudio: (engineFilePath) => ipcRenderer.invoke('audio:applyStock', engineFilePath),
+  detectAudioState: (engineFilePath) => ipcRenderer.invoke('audio:detectState', engineFilePath),
+  openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
 });
 
 contextBridge.exposeInMainWorld('presets', {

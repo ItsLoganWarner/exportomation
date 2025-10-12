@@ -108,6 +108,99 @@ app.whenReady().then(() => {
     }
   });
 
+  // Install enhanced audio camsoEngine.lua into the selected vehicle export
+  ipcMain.handle('audio:applyEnhanced', async (_evt, engineFilePath) => {
+    try {
+      if (!engineFilePath) throw new Error('Missing engine file path');
+      // engineFilePath: .../vehicles/<name>/eng_xxxx/camso_engine_xxxx.jbeam
+      const engDir = path.dirname(engineFilePath);
+      const vehicleDir = path.dirname(engDir); // .../vehicles/<name>
+      const destDir = path.join(vehicleDir, 'lua', 'powertrain');
+      const destFile = path.join(destDir, 'camsoEngine.lua');
+
+      // locate replacement lua
+      const candidatesEnhanced = [
+        path.join(process.resourcesPath || '', 'enhancedAudio', 'camsoEngine.lua'),
+        path.join(process.cwd(), 'assets', 'enhancedAudio', 'camsoEngine.lua'), // dev fallback
+      ];
+      const srcFile = candidatesEnhanced.find(p => {
+        try { return p && fs.existsSync(p); } catch { return false; }
+      });
+      if (!srcFile) {
+        return { success: false, message: 'Enhanced camsoEngine.lua not found in resources.' };
+      }
+
+      fs.mkdirSync(destDir, { recursive: true });
+      fs.copyFileSync(srcFile, destFile);
+      return { success: true };
+    } catch (err) {
+      console.error('audio:applyEnhanced error', err);
+      return { success: false, message: err.message };
+    }
+  });
+
+  // Copy stock camsoEngine.lua (revert)
+  ipcMain.handle('audio:applyStock', async (_evt, engineFilePath) => {
+    try {
+      if (!engineFilePath) throw new Error('Missing engine file path');
+      const engDir = path.dirname(engineFilePath);
+      const vehicleDir = path.dirname(engDir);
+      const destDir = path.join(vehicleDir, 'lua', 'powertrain');
+      const destFile = path.join(destDir, 'camsoEngine.lua');
+
+      const candidatesStock = [
+        path.join(process.resourcesPath || '', 'stockAudio', 'camsoEngine.lua'),
+        path.join(process.cwd(), 'assets', 'stockAudio', 'camsoEngine.lua'), // dev fallback
+      ];
+      const srcFile = candidatesStock.find(p => {
+        try { return p && fs.existsSync(p); } catch { return false; }
+      });
+      if (!srcFile) {
+        return { success: false, message: 'Stock camsoEngine.lua not found in resources.' };
+      }
+
+      fs.mkdirSync(destDir, { recursive: true });
+      fs.copyFileSync(srcFile, destFile);
+      return { success: true };
+    } catch (err) {
+      console.error('audio:applyStock error', err);
+      return { success: false, message: err.message };
+    }
+  });
+
+  // Detect installed camsoEngine.lua state (enhanced/stock/unknown/none)
+  ipcMain.handle('audio:detectState', async (_evt, engineFilePath) => {
+    try {
+      if (!engineFilePath) return { state: 'none' };
+      const engDir = path.dirname(engineFilePath);
+      const vehicleDir = path.dirname(engDir);
+      const current = path.join(vehicleDir, 'lua', 'powertrain', 'camsoEngine.lua');
+      if (!fs.existsSync(current)) return { state: 'none' };
+
+      const read = (p) => fs.existsSync(p) ? fs.readFileSync(p, 'utf-8') : null;
+      const currentTxt = fs.readFileSync(current, 'utf-8');
+      const enhancedTxt = read(path.join(process.resourcesPath || '', 'enhancedAudio', 'camsoEngine.lua'))
+        || read(path.join(process.cwd(), 'assets', 'enhancedAudio', 'camsoEngine.lua'));
+      const stockTxt = read(path.join(process.resourcesPath || '', 'stockAudio', 'camsoEngine.lua'))
+        || read(path.join(process.cwd(), 'assets', 'stockAudio', 'camsoEngine.lua'));
+
+      if (enhancedTxt && currentTxt === enhancedTxt) return { state: 'enhanced' };
+      if (stockTxt && currentTxt === stockTxt) return { state: 'stock' };
+      return { state: 'unknown' };
+    } catch (err) {
+      return { state: 'unknown', message: err.message };
+    }
+  });
+
+  ipcMain.handle('shell:openExternal', async (_evt, url) => {
+    try {
+      await shell.openExternal(url);
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  });
+
   ipcMain.handle('fs:writeFile', async (_evt, filePath, contents) => {
     try {
       await fs.promises.writeFile(filePath, contents, 'utf-8');

@@ -72,6 +72,7 @@ export default function TabStrip({
                     extractedData={enginePart.extracted}
                     onFieldChange={(key, val) => onFieldChange('engine', key, val)}
                     pendingChanges={pendingChanges.engine || {}}
+                    engineFilePath={enginePart.filePath}
                 />;
 
             case 'AfterFire':

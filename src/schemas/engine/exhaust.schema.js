@@ -131,6 +131,40 @@ export default {
           insertUnder: "soundConfigExhaust",
         }
       }
+    },
+    // Enhanced Audio Dynamics fields
+    hush: {
+      type: "number",
+      default: 0.52,
+      tip: "Enhanced Audio: quieting near zero torque (0-1). 0 = no extra hush, 1 = fully muted at zero torque; ramps to normal with torque.",
+      locations: {
+        engine: {
+          regex: /\"hush\"\s*:\s*([0-9.]+)/,
+          insertUnder: "sampleName",
+        }
+      }
+    },
+    kPos: {
+      type: "number",
+      default: 0.8,
+      tip: "Enhanced Audio: positive-torque loudness roll-in. Fraction of WOT torque where full loudness is reached. Lower = louder earlier on throttle.",
+      locations: {
+        engine: {
+          regex: /\"kPos\"\s*:\s*([0-9.]+)/,
+          insertUnder: "sampleName",
+        }
+      }
+    },
+    kNeg: {
+      type: "number",
+      default: 0.95,
+      tip: "Enhanced Audio: engine-braking loudness roll-in. Fraction of negative torque where full loudness is reached. Lower = louder earlier on overrun.",
+      locations: {
+        engine: {
+          regex: /\"kNeg\"\s*:\s*([0-9.]+)/,
+          insertUnder: "sampleName",
+        }
+      }
     }
   }
 };
