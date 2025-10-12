@@ -46,6 +46,25 @@ export default function App() {
         document.body.classList.toggle('dark-mode', darkMode);
     }, [darkMode]);
 
+    // If Apply completed, and enhanced audio is staged, install the Lua
+    useEffect(() => {
+        (async () => {
+            if (!isApplied) return;
+            try {
+                const enginePath = vehicleData?.parts?.engine?.filePath;
+                const flag = pendingChanges.engine?.__enhancedAudio;
+                if (enginePath && flag === true) {
+                    await window.electron.applyEnhancedAudio(enginePath);
+                } else if (enginePath && flag === false) {
+                    await window.electron.applyStockAudio(enginePath);
+                }
+            } catch (e) {
+                console.error('Enhanced Audio install failed:', e);
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isApplied]);
+
     // 1) Field edits (remove key if null/undefined)
     const handleFieldChange = (partKey, key, value) => {
         setPendingChanges(prev => {
@@ -67,7 +86,21 @@ export default function App() {
                 return alert(`Failed on ${part}: ${res.message}`);
             }
         }
-        alert('✓ All changes applied!');
+        // Handle Enhanced Audio Lua copy based on staged toggle
+        try {
+            const enginePath = vehicleData?.parts?.engine?.filePath;
+            const flag = pendingChanges.engine?.__enhancedAudio;
+            if (enginePath && flag === true) {
+                const r = await window.electron.applyEnhancedAudio(enginePath);
+                if (!r?.success) console.error('Enhanced Audio apply failed:', r?.message);
+            } else if (enginePath && flag === false) {
+                const r = await window.electron.applyStockAudio(enginePath);
+                if (!r?.success) console.error('Stock Audio apply failed:', r?.message);
+            }
+        } catch (e) {
+            console.error('Enhanced/Stock Audio apply error:', e);
+        }
+        alert('All changes applied!');
         setIsApplied(true);
     };
 
@@ -116,7 +149,7 @@ export default function App() {
         }
 
         const fileName = await window.presets.save(toSave);
-        if (fileName) alert(`✓ Saved as ${fileName}`);
+        if (fileName) alert(`Ã¢Å“â€œ Saved as ${fileName}`);
     };
 
     // 7) Reveal the user-preset folder in Explorer/Finder
@@ -132,6 +165,14 @@ export default function App() {
             if (!success) {
                 return alert(`Failed to revert ${partKey}: ${message}`);
             }
+        }
+        // Also restore stock camsoEngine.lua
+        try {
+            if (vehicleData?.parts?.engine?.filePath) {
+                await window.electron.applyStockAudio(vehicleData.parts.engine.filePath);
+            }
+        } catch (e) {
+            console.error('Restore stock audio failed:', e);
         }
         setPendingChanges({});
         setIsApplied(false);
@@ -176,15 +217,15 @@ export default function App() {
                                 trimExtracted={vehicleData.parts.infoTrim.extracted}
                                 trimPending={pendingChanges.infoTrim || {}}
                                 onFieldChange={handleFieldChange}
-                                onExit={() => setActiveView('General')} // ← back to tabs
+                                onExit={() => setActiveView('General')} // Ã¢â€ Â back to tabs
                             />
                         ) : (
                             <TabStrip
                                 parts={vehicleData.parts}
                                 onFieldChange={handleFieldChange}
                                 pendingChanges={pendingChanges}
-                                active={activeView} // ← controlled
-                                onTabChange={setActiveView} // ← controlled
+                                active={activeView} // Ã¢â€ Â controlled
+                                onTabChange={setActiveView} // Ã¢â€ Â controlled
                             />
                         )}
                         <Footer

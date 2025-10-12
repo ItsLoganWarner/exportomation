@@ -8,6 +8,11 @@ module.exports = {
     asar: true,
     // point at your icon _without_ extension; electron-packager will pick .ico/.icns
     icon: path.resolve(__dirname, 'assets', 'icons', 'app-icon'),
+    // bundle enhanced audio lua into resources/enhancedAudio/
+    extraResource: [
+      path.resolve(__dirname, 'assets', 'enhancedAudio'),
+      path.resolve(__dirname, 'assets', 'stockAudio')
+    ],
   },
   rebuildConfig: {},
   makers: [
